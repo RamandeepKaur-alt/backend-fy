@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String   @unique
+  password    String?
+  lockPassword String?
+  
+  // Account management
+  isActive    Boolean  @default(true)
+  lastLogin   DateTime?
+  
+  folders     Folder[]
+  files       File[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Folder {
+  id     Int    @id @default(autoincrement())
+  name   String
+  user   User   @relation(fields: [userId], references: [id])
+  userId Int
+
+  parentId   Int?
+  parent     Folder?  @relation("FolderToSubfolder", fields: [parentId], references: [id], onDelete: Cascade)
+  subfolders Folder[] @relation("FolderToSubfolder")
+
+  files File[] @relation("FolderFiles")
+
+  isLocked     Boolean @default(false)
+  lockPassword String?
+  isImportant  Boolean @default(false)
+  folderColor  String  @default("blue")
+
+  createdAt DateTime @default(now())
+}
+
+model File {
+  id       Int    @id @default(autoincrement())
+  name     String
+  url      String
+  size     Int
+  mimetype String
+  isLocked Boolean @default(false)
+  
+
+  folder   Folder? @relation("FolderFiles", fields: [folderId], references: [id], onDelete: Cascade)
+  folderId Int?
+
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+
+  // Magic Lens analysis fields
+  magicLensSummary   String?
+  magicLensKeyPoints String? // JSON array stored as string
+  magicLensFileType  String?
+  magicLensConfidence Float?
+  magicLensAnalyzedAt DateTime?
+
+  createdAt DateTime @default(now())
+}
