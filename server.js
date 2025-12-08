@@ -49,6 +49,12 @@ app.get("/api/test", (req, res)=>{
     res.json({ok:true, message: "Fynora backend running"});
 });
 
+//test 2
+app.get("/api/test2", (req , res)=>{
+  res.json({
+    msg: "test2 was successful!!"
+  })
+});
 
 
 const PORT = process.env.PORT || 5000;
