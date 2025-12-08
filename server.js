@@ -52,8 +52,8 @@ app.get("/api/test", (req, res)=>{
 //test 2
 app.get("/api/test2", (req , res)=>{
   res.json({
-    msg: "test2 was successful!!"
-  })
+   ok:true, message: "UPDATE Fynora backend running UPDATE"
+  });
 });
 
 
