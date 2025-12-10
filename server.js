@@ -23,15 +23,17 @@ prisma.$connect()
     console.error("❌ Failed to connect to PostgreSQL:", error);
   });
 
-// CORS configuration
+// CORS configuration (global, single source of truth)
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: process.env.FRONTEND_URL || "https://frontend-fy.vercel.app",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
+
 app.use(express.json());
 app.use(express.static("uploads")); // Serve uploaded files
 
