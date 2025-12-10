@@ -11,6 +11,8 @@ import {
     getLockedFiles,
     unlockFile,
     assignCategoryToFile,
+    getFilesByCategory,
+    getRecentFiles,
 } from "../controllers/fileController.js";
 import { auth } from "../middleware/auth.js";
 import { upload } from "../middleware/upload.js";
@@ -25,6 +27,13 @@ router.post("/create", auth, createFile);
 
 // Get root files (files with no parent folder)
 router.get("/root", auth, getRootFiles);
+
+// Get most recently updated files (Recents across all folders/categories)
+router.get("/recent", auth, getRecentFiles);
+
+// Get files by category name (or root files when category is missing)
+// Usage: GET /api/files?category=Documents
+router.get("/", auth, getFilesByCategory);
 
 // Get all locked files for the current user
 router.get("/locked", auth, getLockedFiles);

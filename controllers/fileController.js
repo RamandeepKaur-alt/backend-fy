@@ -161,26 +161,117 @@ export const getLockedFiles = async (req, res) => {
 // Get root files (files with no parent folder)
 export const getRootFiles = async (req, res) => {
     try {
-        const userId = req.user.id;
-        
-        if (!userId) {
+        if (!req.user || !req.user.id) {
+            console.warn("getRootFiles: req.user or req.user.id is missing");
             return res.status(401).json({ error: "User ID not found in token" });
         }
+
+        const userId = req.user.id;
 
         const files = await prisma.file.findMany({
             where: {
                 folderId: null,
-                userId: userId,
+                userId,
             },
-            orderBy: { createdAt: "desc" }
+            // Order by ID to avoid relying on createdAt column existence
+            orderBy: { id: "desc" },
         });
 
         console.log(`Fetched ${files.length} root files for user ${userId}`);
-        res.json({ files });
+        return res.json({ files });
 
     } catch (error) {
         console.error("Error fetching root files:", error);
-        res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: error.message || "Failed to fetch root files" });
+    }
+};
+
+// Get most recently updated files for the authenticated user (global Recents)
+// Supports GET /api/files/recent
+export const getRecentFiles = async (req, res) => {
+    try {
+        if (!req.user || !req.user.id) {
+            console.warn("getRecentFiles: req.user or req.user.id is missing");
+            return res.status(401).json({ error: "User ID not found in token" });
+        }
+
+        const userId = req.user.id;
+
+        const files = await prisma.file.findMany({
+            where: {
+                userId,
+            },
+            // Order by ID to avoid relying on createdAt column existence
+            orderBy: {
+                id: "desc",
+            },
+            take: 50,
+        });
+
+        return res.json({ files });
+    } catch (error) {
+        console.error("getRecentFiles error:", error);
+        return res.status(500).json({ error: error.message || "Failed to fetch recent files" });
+    }
+};
+
+// Get files by category name for the authenticated user
+// Supports GET /api/files?category=name
+// - Always returns JSON and never 404s for missing categories
+// - If category does not exist for this user, it is auto-created
+export const getFilesByCategory = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { category } = req.query;
+
+        if (!userId) {
+            return res.status(401).json({ error: "User ID not found in token" });
+        }
+
+        // If no category is provided, fall back to root files
+        if (!category || typeof category !== "string" || !category.trim()) {
+            const files = await prisma.file.findMany({
+                where: {
+                    userId,
+                    folderId: null,
+                },
+                orderBy: { createdAt: "desc" },
+            });
+
+            return res.json({ category: null, files });
+        }
+
+        const normalizedName = category.trim();
+
+        // Resolve or create the category for this user using { name, userId }
+        let categoryRecord = await prisma.category.findFirst({
+            where: {
+                name: normalizedName,
+                userId,
+            },
+        });
+
+        if (!categoryRecord) {
+            categoryRecord = await prisma.category.create({
+                data: {
+                    name: normalizedName,
+                    userId,
+                },
+            });
+        }
+
+        const files = await prisma.file.findMany({
+            where: {
+                userId,
+                categoryId: categoryRecord.id,
+            },
+            orderBy: { createdAt: "desc" },
+        });
+
+        return res.json({ category: categoryRecord, files });
+    } catch (error) {
+        console.error("getFilesByCategory error:", error);
+        return res.status(500).json({ error: error.message });
     }
 };
 

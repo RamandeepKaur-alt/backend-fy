@@ -18,18 +18,11 @@ export const getOrCreateCategoryByName = async (req, res) => {
 
         const normalizedName = name.trim();
 
-        // Try to find a user-specific or global category with this name
+        // Always resolve categories by { name, userId } for this user
         let category = await prisma.category.findFirst({
             where: {
                 name: normalizedName,
-                OR: [
-                    { userId },
-                    { userId: null },
-                ],
-            },
-            orderBy: {
-                // Prefer user-specific category if both exist
-                userId: "desc",
+                userId,
             },
         });
 
