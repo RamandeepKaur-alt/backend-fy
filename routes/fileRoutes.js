@@ -10,6 +10,7 @@ import {
     moveFile,
     getLockedFiles,
     unlockFile,
+    assignCategoryToFile,
 } from "../controllers/fileController.js";
 import { auth } from "../middleware/auth.js";
 import { upload } from "../middleware/upload.js";
@@ -45,5 +46,8 @@ router.put("/:id/move", auth, moveFile);
 
 // Unlock file
 router.post("/unlock/:id", auth, unlockFile);
+
+// Assign category to file
+router.post("/assign-category", auth, assignCategoryToFile);
 
 export default router;

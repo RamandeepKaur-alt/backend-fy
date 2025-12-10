@@ -20,6 +20,7 @@ model User {
   
   folders     Folder[]
   files       File[]
+  categories  Category[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -59,12 +60,28 @@ model File {
   user   User @relation(fields: [userId], references: [id])
   userId Int
 
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId Int?
+
   // Magic Lens analysis fields
   magicLensSummary   String?
   magicLensKeyPoints String? // JSON array stored as string
   magicLensFileType  String?
   magicLensConfidence Float?
   magicLensAnalyzedAt DateTime?
+
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id      Int    @id @default(autoincrement())
+  name    String
+
+  // If userId is null, category is global and shared by all users
+  user     User?  @relation(fields: [userId], references: [id])
+  userId   Int?
+
+  files   File[]
 
   createdAt DateTime @default(now())
 }

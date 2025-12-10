@@ -6,6 +6,7 @@ import {auth} from "./middleware/auth.js";
 import fileRoutes from "./routes/fileRoutes.js";
 import itemsRoutes from "./routes/itemsRoutes.js";
 import magicLensRoutes from "./routes/magicLensRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
 import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
 
@@ -42,6 +43,7 @@ app.use("/api/folders", folderRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/items", itemsRoutes); // Unified items routes (files & folders)
 app.use("/api/magic-lens", magicLensRoutes);
+app.use("/api/categories", categoryRoutes);
 
 
 //test route 

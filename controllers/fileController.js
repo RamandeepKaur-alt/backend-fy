@@ -337,3 +337,53 @@ export const moveFile = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+// Assign a file to a category
+export const assignCategoryToFile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { fileId, categoryId } = req.body;
+
+        if (!userId) {
+            return res.status(401).json({ error: "User ID missing from token" });
+        }
+
+        if (!fileId || !categoryId) {
+            return res.status(400).json({ error: "fileId and categoryId are required" });
+        }
+
+        const numericFileId = Number(fileId);
+        const numericCategoryId = Number(categoryId);
+
+        if (Number.isNaN(numericFileId) || Number.isNaN(numericCategoryId)) {
+            return res.status(400).json({ error: "fileId and categoryId must be numbers" });
+        }
+
+        const file = await prisma.file.findUnique({ where: { id: numericFileId } });
+        if (!file) {
+            return res.status(404).json({ error: "File not found" });
+        }
+        if (file.userId !== userId) {
+            return res.status(403).json({ error: "Unauthorized to modify this file" });
+        }
+
+        const category = await prisma.category.findUnique({ where: { id: numericCategoryId } });
+        if (!category) {
+            return res.status(404).json({ error: "Category not found" });
+        }
+
+        if (category.userId !== null && category.userId !== userId) {
+            return res.status(403).json({ error: "Unauthorized to use this category" });
+        }
+
+        const updated = await prisma.file.update({
+            where: { id: numericFileId },
+            data: { categoryId: numericCategoryId },
+        });
+
+        return res.json({ message: "Category assigned to file", file: updated });
+    } catch (error) {
+        console.error("assignCategoryToFile error:", error);
+        return res.status(500).json({ error: error.message });
+    }
+};
